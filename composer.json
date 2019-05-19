@@ -1,6 +1,6 @@
 {
   "name": "packaged/di-container",
-  "description": "Generic HTTP Transport",
+  "description": "Dependency Injector",
   "license": "MIT",
   "authors": [
     {
