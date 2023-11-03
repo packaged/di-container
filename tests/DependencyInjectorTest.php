@@ -274,4 +274,25 @@ class DependencyInjectorTest extends TestCase
     static::expectExceptionMessage("Incorrect binding to " . basename(ExtendedBasicObject::class));
     $di->retrieve(ExtendedBasicObject::class);
   }
+
+  public function testOnAfterResolve()
+  {
+    $di = new DependencyInjector();
+    $di->share(BasicObject::class, (new BasicObject())->setValue('abc-def'));
+    $basic1 = $di->retrieve(BasicObject::class);
+    static::assertInstanceOf(BasicObject::class, $basic1);
+    static::assertEquals('abc-def', $basic1->getValue());
+
+    $di = new DependencyInjector();
+    $di->onAfterResolve(function ($instance) {
+      if($instance instanceof BasicObject)
+      {
+        $instance->setValue('after-resolve');
+      }
+    });
+
+    $basic2 = $di->retrieve(BasicObject::class);
+    static::assertInstanceOf(BasicObject::class, $basic2);
+    static::assertEquals('after-resolve', $basic2->getValue());
+  }
 }

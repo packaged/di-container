@@ -19,6 +19,9 @@ class DependencyInjector
   // Alias Abstracts [abstract => [to, strict]]
   protected array $_aliases = [];
 
+  // Post Resolver Callbacks
+  protected array $_postResolver = [];
+
   public function factory($abstract, callable $generator, $mode = self::MODE_MUTABLE)
   {
     $this->_factories[$abstract] = ['generator' => $generator, 'mode' => $mode];
@@ -75,6 +78,7 @@ class DependencyInjector
       $instance = $this->_factories[$abstract]['generator'](...$parameters);
       if($instance !== null)
       {
+        $instance = $this->_postResolve($instance);
         if($shared)
         {
           $this->share($abstract, $instance, $this->_factories[$abstract]['mode']);
@@ -202,7 +206,7 @@ class DependencyInjector
   public function resolveMethod(object $object, ?string $method, ...$parameters): mixed
   {
     $reflection = new \ReflectionMethod($object, $method);
-    return $reflection->invokeArgs($object, $this->_resolveParameters($reflection, $parameters));
+    return $this->_postResolve($reflection->invokeArgs($object, $this->_resolveParameters($reflection, $parameters)));
   }
 
   public function resolveObject(string $className, ...$parameters): object
@@ -211,9 +215,9 @@ class DependencyInjector
     $constructor = $reflection->getConstructor();
     if($constructor)
     {
-      return $reflection->newInstanceArgs($this->_resolveParameters($constructor, $parameters));
+      return $this->_postResolve($reflection->newInstanceArgs($this->_resolveParameters($constructor, $parameters)));
     }
-    return $reflection->newInstance();
+    return $this->_postResolve($reflection->newInstance());
   }
 
   public function resolve(string $class, ...$parameters): mixed
@@ -225,5 +229,20 @@ class DependencyInjector
     }
 
     return $this->resolveObject($class, ...$parameters);
+  }
+
+  protected function _postResolve($instance)
+  {
+    foreach($this->_postResolver as $callback)
+    {
+      $callback($instance);
+    }
+    return $instance;
+  }
+
+  public function onAfterResolve(callable $callback)
+  {
+    $this->_postResolver[] = $callback;
+    return $this;
   }
 }
