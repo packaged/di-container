@@ -16,6 +16,9 @@ class DependencyInjector
   //Shared Instances
   protected array $_instances = [];
 
+  // Alias Abstracts [abstract => [to, strict]]
+  protected array $_aliases = [];
+
   public function factory($abstract, callable $generator, $mode = self::MODE_MUTABLE)
   {
     $this->_factories[$abstract] = ['generator' => $generator, 'mode' => $mode];
@@ -33,6 +36,22 @@ class DependencyInjector
     if(isset($this->_instances[$abstract]) && $this->_instances[$abstract]['mode'] !== self::MODE_IMMUTABLE)
     {
       unset($this->_instances[$abstract]);
+    }
+    return $this;
+  }
+
+  /**
+   * @param string $fromAbstract
+   * @param string $toAbstract
+   * @param bool   $strictResolution after resolution, perform a type check of the original
+   *
+   * @return $this
+   */
+  public function aliasAbstract(string $fromAbstract, string $toAbstract, bool $strictResolution = true)
+  {
+    if($fromAbstract != $toAbstract)
+    {
+      $this->_aliases[$fromAbstract] = [$toAbstract, $strictResolution];
     }
     return $this;
   }
@@ -62,6 +81,16 @@ class DependencyInjector
         }
         return $instance;
       }
+    }
+    else if(isset($this->_aliases[$abstract]))
+    {
+      [$aliasTo, $strict] = $this->_aliases[$abstract];
+      $resolved = $this->retrieve($aliasTo, $parameters, $shared);
+      if($resolved && $strict && !($resolved instanceof $abstract))
+      {
+        throw new \Exception("Incorrect binding to " . basename($abstract));
+      }
+      return $resolved;
     }
     else if(class_exists($abstract))
     {

@@ -6,6 +6,7 @@ use Packaged\DiContainer\DependencyInjector;
 use Packaged\Tests\DiContainer\Supporting\BasicObject;
 use Packaged\Tests\DiContainer\Supporting\Cache;
 use Packaged\Tests\DiContainer\Supporting\CacheInterface;
+use Packaged\Tests\DiContainer\Supporting\ExtendedBasicObject;
 use Packaged\Tests\DiContainer\Supporting\MethodCaller;
 use Packaged\Tests\DiContainer\Supporting\NeedyObject;
 use Packaged\Tests\DiContainer\Supporting\ServiceInterface;
@@ -248,5 +249,29 @@ class DependencyInjectorTest extends TestCase
     $di->share(ServiceInterface::class, new ServiceTwo());
     $result = $di->resolve(MethodCaller::class . ':darkMode', 'apple');
     static::assertEquals('dark apple', $result);
+  }
+
+  public function testAliasAbstract()
+  {
+    $di = new DependencyInjector();
+    $src = new ExtendedBasicObject();
+    $src->setValue('test-value');
+    $di->share(BasicObject::class, $src);
+    $di->aliasAbstract(ExtendedBasicObject::class, BasicObject::class);
+
+    $resolved = $di->retrieve(ExtendedBasicObject::class);
+    static::assertInstanceOf(ExtendedBasicObject::class, $resolved);
+    static::assertEquals('test-value', $resolved->getValue());
+  }
+
+  public function testAliasAbstractIncorrectBinding()
+  {
+    $di = new DependencyInjector();
+    $di->share(ServiceInterface::class, new ServiceOne());
+    $di->aliasAbstract(ExtendedBasicObject::class, ServiceInterface::class);
+
+    static::expectException(\Exception::class);
+    static::expectExceptionMessage("Incorrect binding to " . basename(ExtendedBasicObject::class));
+    $di->retrieve(ExtendedBasicObject::class);
   }
 }
