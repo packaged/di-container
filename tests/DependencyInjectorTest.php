@@ -3,7 +3,15 @@
 namespace Packaged\Tests\DiContainer;
 
 use Packaged\DiContainer\DependencyInjector;
+use Packaged\Tests\DiContainer\Supporting\BasicObject;
+use Packaged\Tests\DiContainer\Supporting\Cache;
+use Packaged\Tests\DiContainer\Supporting\CacheInterface;
+use Packaged\Tests\DiContainer\Supporting\NeedyObject;
+use Packaged\Tests\DiContainer\Supporting\ServiceInterface;
+use Packaged\Tests\DiContainer\Supporting\ServiceOne;
+use Packaged\Tests\DiContainer\Supporting\ServiceTwo;
 use Packaged\Tests\DiContainer\Supporting\TestObject;
+use Packaged\Tests\DiContainer\Supporting\UnusedInterface;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -164,5 +172,47 @@ class DependencyInjectorTest extends TestCase
     $i3 = $di->retrieve('F', ['a', 'z', 'x', 'y'], false);
     $this->assertEquals(4, $i3->paramCount());
     $this->assertNotSame($i2, $i3);
+  }
+
+  public function testResolveMethod()
+  {
+    $di = new DependencyInjector();
+    $di->share(ServiceInterface::class, new ServiceOne());
+
+    $tst = new TestObject();
+    $result = $di->resolveMethod($tst, 'process', 'textValue');
+    static::assertEquals("textValue without cache failed", $result);
+
+    $di->share(ServiceInterface::class, new ServiceTwo());
+    $result = $di->resolveMethod($tst, 'process', 'textValue');
+    static::assertEquals("textValue without cache passed", $result);
+
+    $di->share(ServiceInterface::class, new ServiceTwo());
+    $di->share(CacheInterface::class, new Cache());
+    $result = $di->resolveMethod($tst, 'process', 'textValue');
+    static::assertEquals("textValue with cache passed", $result);
+
+    $basic = new BasicObject();
+    static::expectException(\Exception::class);
+    static::expectExceptionMessage("Unable to retrieve " . basename(UnusedInterface::class));
+    $di->resolveMethod($basic, 'missingService');
+  }
+
+  public function testResolveObject()
+  {
+    $di = new DependencyInjector();
+
+    $di->share(ServiceInterface::class, new ServiceOne());
+    $object = $di->resolveObject(NeedyObject::class);
+    static::assertInstanceOf(NeedyObject::class, $object);
+    static::assertFalse($object->process());
+
+    $di->share(ServiceInterface::class, new ServiceTwo());
+    $object = $di->resolveObject(NeedyObject::class);
+    static::assertInstanceOf(NeedyObject::class, $object);
+    static::assertTrue($object->process());
+
+    $object = $di->resolveObject(BasicObject::class);
+    static::assertInstanceOf(BasicObject::class, $object);
   }
 }

@@ -14,4 +14,9 @@ class TestObject
   {
     return count($this->params);
   }
+
+  public function process(ServiceInterface $service, ?CacheInterface $cache, string $input): string
+  {
+    return $input . ' ' . ($cache === null ? 'without' : 'with') . ' cache' . ($service->process() ? ' passed' : ' failed');
+  }
 }

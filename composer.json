@@ -9,11 +9,11 @@
     }
   ],
   "require": {
-    "php": ">=7.1",
+    "php": ">=8.0",
     "packaged/helpers": "~2.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "^8.0"
+    "phpunit/phpunit": "^9.0"
   },
   "autoload": {
     "psr-4": {
