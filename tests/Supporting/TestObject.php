@@ -3,11 +3,11 @@ namespace Packaged\Tests\DiContainer\Supporting;
 
 class TestObject
 {
-  public $params = [];
+  public array $params = [];
 
   public function __construct(array $params = null)
   {
-    $this->params = $params;
+    $this->params = $params ?? [];
   }
 
   public function paramCount()
@@ -17,6 +17,7 @@ class TestObject
 
   public function process(ServiceInterface $service, ?CacheInterface $cache, string $input): string
   {
-    return $input . ' ' . ($cache === null ? 'without' : 'with') . ' cache' . ($service->process() ? ' passed' : ' failed');
+    return $input . ' ' . ($cache === null ? 'without' : 'with') . ' cache' . ($service->process() ? ' passed' :
+        ' failed');
   }
 }

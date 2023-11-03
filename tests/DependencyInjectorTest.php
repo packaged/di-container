@@ -215,4 +215,21 @@ class DependencyInjectorTest extends TestCase
     $object = $di->resolveObject(BasicObject::class);
     static::assertInstanceOf(BasicObject::class, $object);
   }
+
+  public function testRetrieveAll()
+  {
+    $di = new DependencyInjector();
+    $di->share(ServiceInterface::class, new ServiceOne());
+    $di->share(CacheInterface::class, new Cache());
+
+    $all = $di->retrieveAll([ServiceInterface::class, CacheInterface::class, [TestObject::class, ['a', 'b']]]);
+
+    static::assertCount(3, $all);
+    static::assertInstanceOf(ServiceOne::class, $all[0]);
+    static::assertInstanceOf(Cache::class, $all[1]);
+
+    $tObj = $all[2];
+    static::assertInstanceOf(TestObject::class, $tObj);
+    static::assertEquals(2, $tObj->paramCount());
+  }
 }

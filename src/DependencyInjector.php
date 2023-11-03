@@ -63,7 +63,29 @@ class DependencyInjector
         return $instance;
       }
     }
+    else if(class_exists($abstract))
+    {
+      return $this->resolve($abstract, ...$parameters);
+    }
+
     throw new \Exception("Unable to retrieve " . basename($abstract));
+  }
+
+  public function retrieveAll(array $abstracts, bool $shared = true): array
+  {
+    $instances = [];
+    foreach($abstracts as $abstract)
+    {
+      if(is_array($abstract))
+      {
+        $instances[] = $this->retrieve(array_shift($abstract), $abstract, $shared);
+      }
+      else
+      {
+        $instances[] = $this->retrieve($abstract, [], $shared);
+      }
+    }
+    return $instances;
   }
 
   /**
@@ -157,5 +179,16 @@ class DependencyInjector
       return $reflection->newInstanceArgs($this->_resolveParameters($constructor, $parameters));
     }
     return $reflection->newInstance();
+  }
+
+  public function resolve(string $class, ...$parameters): object
+  {
+    if(stristr($class, ':'))
+    {
+      [$className, $method] = explode(':', $class, 2);
+      return $this->resolveMethod($this->resolveObject($className), $method, ...$parameters);
+    }
+
+    return $this->resolveObject($class, ...$parameters);
   }
 }
