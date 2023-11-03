@@ -181,7 +181,7 @@ class DependencyInjector
     return $reflection->newInstance();
   }
 
-  public function resolve(string $class, ...$parameters): object
+  public function resolve(string $class, ...$parameters): mixed
   {
     if(stristr($class, ':'))
     {

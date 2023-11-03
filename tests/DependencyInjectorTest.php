@@ -6,6 +6,7 @@ use Packaged\DiContainer\DependencyInjector;
 use Packaged\Tests\DiContainer\Supporting\BasicObject;
 use Packaged\Tests\DiContainer\Supporting\Cache;
 use Packaged\Tests\DiContainer\Supporting\CacheInterface;
+use Packaged\Tests\DiContainer\Supporting\MethodCaller;
 use Packaged\Tests\DiContainer\Supporting\NeedyObject;
 use Packaged\Tests\DiContainer\Supporting\ServiceInterface;
 use Packaged\Tests\DiContainer\Supporting\ServiceOne;
@@ -231,5 +232,21 @@ class DependencyInjectorTest extends TestCase
     $tObj = $all[2];
     static::assertInstanceOf(TestObject::class, $tObj);
     static::assertEquals(2, $tObj->paramCount());
+  }
+
+  public function testResolve()
+  {
+    $di = new DependencyInjector();
+    $resolved = $di->resolve(TestObject::class, ['a', 'b']);
+    static::assertInstanceOf(TestObject::class, $resolved);
+    static::assertEquals(2, $resolved->paramCount());
+
+    $di->share(ServiceInterface::class, new ServiceOne());
+    $result = $di->resolve(MethodCaller::class . ':darkMode', 'apple');
+    static::assertEquals('light apple', $result);
+
+    $di->share(ServiceInterface::class, new ServiceTwo());
+    $result = $di->resolve(MethodCaller::class . ':darkMode', 'apple');
+    static::assertEquals('dark apple', $result);
   }
 }
