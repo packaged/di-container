@@ -170,6 +170,12 @@ class DependencyInjector
   protected function _resolveParameters(\ReflectionMethod $reflection, array $parameters = []): array
   {
     $dependencies = [];
+    $inputCount = count($parameters);
+    if($reflection->getNumberOfParameters() <= $inputCount)
+    {
+      return $parameters;
+    }
+
     foreach($reflection->getParameters() as $parameter)
     {
       $pType = $parameter->getType();
