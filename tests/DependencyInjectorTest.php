@@ -9,6 +9,7 @@ use Packaged\Tests\DiContainer\Supporting\CacheInterface;
 use Packaged\Tests\DiContainer\Supporting\ExtendedBasicObject;
 use Packaged\Tests\DiContainer\Supporting\MethodCaller;
 use Packaged\Tests\DiContainer\Supporting\NeedyObject;
+use Packaged\Tests\DiContainer\Supporting\ResolvableObject;
 use Packaged\Tests\DiContainer\Supporting\ServiceInterface;
 use Packaged\Tests\DiContainer\Supporting\ServiceOne;
 use Packaged\Tests\DiContainer\Supporting\ServiceTwo;
@@ -294,5 +295,19 @@ class DependencyInjectorTest extends TestCase
     $basic2 = $di->retrieve(BasicObject::class);
     static::assertInstanceOf(BasicObject::class, $basic2);
     static::assertEquals('after-resolve', $basic2->getValue());
+  }
+
+  public function testResolvable()
+  {
+    $di = new DependencyInjector();
+    $di->share(ServiceInterface::class, new ServiceOne());
+
+    $inst = $di->resolve(ResolvableObject::class);
+    static::assertInstanceOf(ResolvableObject::class, $inst);
+    static::assertInstanceOf(ServiceOne::class, $inst->getSvc());
+
+    $inst2 = $di->resolved(new ResolvableObject());
+    static::assertInstanceOf(ResolvableObject::class, $inst2);
+    static::assertInstanceOf(ServiceOne::class, $inst2->getSvc());
   }
 }

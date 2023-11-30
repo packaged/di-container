@@ -231,8 +231,20 @@ class DependencyInjector
     return $this->resolveObject($class, ...$parameters);
   }
 
+  public function resolved(Resolvable $instance)
+  {
+    $reflection = new \ReflectionMethod($instance, 'resolveWith');
+    $reflection->invokeArgs($instance, $this->_resolveParameters($reflection));
+    return $instance;
+  }
+
   protected function _postResolve($instance)
   {
+    if($instance instanceof Resolvable)
+    {
+      $instance = $this->resolved($instance);
+    }
+
     foreach($this->_postResolver as $callback)
     {
       $callback($instance);
