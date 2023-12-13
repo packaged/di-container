@@ -22,7 +22,7 @@ class DependencyInjector
   // Post Resolver Callbacks
   protected array $_postResolver = [];
 
-  public function factory($abstract, callable $generator, $mode = self::MODE_MUTABLE)
+  public function factory($abstract, string|callable $generator, $mode = self::MODE_MUTABLE)
   {
     $this->_factories[$abstract] = ['generator' => $generator, 'mode' => $mode];
     return $this;
@@ -75,7 +75,26 @@ class DependencyInjector
     }
     if(isset($this->_factories[$abstract]))
     {
-      $instance = $this->_factories[$abstract]['generator'](...$parameters);
+      $factory = $this->_factories[$abstract]['generator'];
+      if(is_string($factory) && $factory != $abstract)
+      {
+        $factory = $this->retrieve($factory);
+        if($factory !== null)
+        {
+          // Cache the factory
+          $this->_factories[$abstract]['generator'] = $factory;
+        }
+      }
+
+      if($factory instanceof DependencyFactory)
+      {
+        $instance = $factory->generate($abstract, $parameters);
+      }
+      else
+      {
+        $instance = $factory(...$parameters);
+      }
+
       if($instance !== null)
       {
         $instance = $this->_postResolve($instance);
@@ -98,7 +117,12 @@ class DependencyInjector
     }
     else if(class_exists($abstract))
     {
-      return $this->resolve($abstract, ...$parameters);
+      $instance = $this->resolve($abstract, ...$parameters);
+      if($shared)
+      {
+        $this->share($abstract, $instance);
+      }
+      return $instance;
     }
 
     throw new \Exception("Unable to retrieve " . basename($abstract));

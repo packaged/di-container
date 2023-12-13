@@ -13,6 +13,7 @@ use Packaged\Tests\DiContainer\Supporting\ResolvableObject;
 use Packaged\Tests\DiContainer\Supporting\ServiceInterface;
 use Packaged\Tests\DiContainer\Supporting\ServiceOne;
 use Packaged\Tests\DiContainer\Supporting\ServiceTwo;
+use Packaged\Tests\DiContainer\Supporting\TestFactory;
 use Packaged\Tests\DiContainer\Supporting\TestObject;
 use Packaged\Tests\DiContainer\Supporting\UnusedInterface;
 use PHPUnit\Framework\TestCase;
@@ -309,5 +310,21 @@ class DependencyInjectorTest extends TestCase
     $inst2 = $di->resolved(new ResolvableObject());
     static::assertInstanceOf(ResolvableObject::class, $inst2);
     static::assertInstanceOf(ServiceOne::class, $inst2->getSvc());
+  }
+
+  public function testDependencyFactory()
+  {
+    $di = new DependencyInjector();
+    $di->factory(ServiceInterface::class, TestFactory::class);
+    $factory = $di->retrieve(TestFactory::class);
+    static::assertInstanceOf(TestFactory::class, $factory);
+    static::assertEquals(0, $factory->getGenerated());
+    $svc1 = $factory->generate(ServiceOne::class);
+    static::assertInstanceOf(ServiceOne::class, $svc1);
+    static::assertEquals(1, $factory->getGenerated());
+
+    $svc2 = $di->retrieve(ServiceInterface::class);
+    static::assertInstanceOf(ServiceOne::class, $svc2);
+    static::assertEquals(2, $factory->getGenerated());
   }
 }
