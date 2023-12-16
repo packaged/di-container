@@ -255,10 +255,13 @@ class DependencyInjector
     return $this->resolveObject($class, ...$parameters);
   }
 
-  public function resolved(Resolvable $instance)
+  public function resolved($instance)
   {
-    $reflection = new \ReflectionMethod($instance, 'resolveWith');
-    $reflection->invokeArgs($instance, $this->_resolveParameters($reflection));
+    if($instance instanceof Resolvable)
+    {
+      $reflection = new \ReflectionMethod($instance, 'resolveWith');
+      $reflection->invokeArgs($instance, $this->_resolveParameters($reflection));
+    }
     return $instance;
   }
 
