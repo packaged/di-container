@@ -267,10 +267,7 @@ class DependencyInjector
 
   protected function _postResolve($instance)
   {
-    if($instance instanceof Resolvable)
-    {
-      $instance = $this->resolved($instance);
-    }
+    $instance = $this->resolved($instance);
 
     foreach($this->_postResolver as $callback)
     {
