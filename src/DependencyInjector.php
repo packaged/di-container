@@ -2,6 +2,7 @@
 namespace Packaged\DiContainer;
 
 use Packaged\Helpers\Objects;
+use ReflectionException;
 use function class_exists;
 use function is_scalar;
 
@@ -227,12 +228,28 @@ class DependencyInjector
     return array_merge($dependencies, $parameters);
   }
 
+  /**
+   * @param object      $object
+   * @param string|null $method
+   * @param mixed       ...$parameters
+   *
+   * @return mixed
+   * @throws ReflectionException
+   */
   public function resolveMethod(object $object, ?string $method, ...$parameters): mixed
   {
     $reflection = new \ReflectionMethod($object, $method);
     return $this->_postResolve($reflection->invokeArgs($object, $this->_resolveParameters($reflection, $parameters)));
   }
 
+  /**
+   * @template T
+   * @param class-string<T> $className
+   * @param                 ...$parameters
+   *
+   * @return T
+   * @throws ReflectionException
+   */
   public function resolveObject(string $className, ...$parameters): object
   {
     $reflection = new \ReflectionClass($className);
@@ -244,6 +261,14 @@ class DependencyInjector
     return $this->_postResolve($reflection->newInstance());
   }
 
+  /**
+   * @template T
+   * @param class-string<T> $class
+   * @param mixed           ...$parameters
+   *
+   * @return T|mixed
+   * @throws ReflectionException
+   */
   public function resolve(string $class, ...$parameters): mixed
   {
     if(stristr($class, ':'))
@@ -265,6 +290,12 @@ class DependencyInjector
     return $instance;
   }
 
+  /**
+   * @template T
+   * @param T $instance
+   *
+   * @return T
+   */
   protected function _postResolve($instance)
   {
     $instance = $this->resolved($instance);
