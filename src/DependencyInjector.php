@@ -23,6 +23,14 @@ class DependencyInjector
   // Post Resolver Callbacks
   protected array $_postResolver = [];
 
+  protected ?ReflectionObserver $_reflectionObserver = null;
+
+  public function setReflectionObserver(ReflectionObserver $observer): ReflectionObserver
+  {
+    $this->_reflectionObserver = $observer;
+    return $this->_reflectionObserver;
+  }
+
   public function factory($abstract, string|callable $generator, $mode = self::MODE_MUTABLE)
   {
     $this->_factories[$abstract] = ['generator' => $generator, 'mode' => $mode];
@@ -239,6 +247,7 @@ class DependencyInjector
   public function resolveMethod(object $object, ?string $method, ...$parameters): mixed
   {
     $reflection = new \ReflectionMethod($object, $method);
+    $this->_reflectionObserver?->observe($reflection);
     return $this->_postResolve($reflection->invokeArgs($object, $this->_resolveParameters($reflection, $parameters)));
   }
 
@@ -253,6 +262,7 @@ class DependencyInjector
   public function resolveObject(string $className, ...$parameters): object
   {
     $reflection = new \ReflectionClass($className);
+    $this->_reflectionObserver?->observe($reflection);
     $constructor = $reflection->getConstructor();
     if($constructor)
     {

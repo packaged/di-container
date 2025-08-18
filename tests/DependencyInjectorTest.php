@@ -2,6 +2,7 @@
 
 namespace Packaged\Tests\DiContainer;
 
+use Packaged\DiContainer\AttributeWatcher;
 use Packaged\DiContainer\DependencyInjector;
 use Packaged\Tests\DiContainer\Supporting\BasicObject;
 use Packaged\Tests\DiContainer\Supporting\Cache;
@@ -326,5 +327,21 @@ class DependencyInjectorTest extends TestCase
     $svc2 = $di->retrieve(ServiceInterface::class);
     static::assertInstanceOf(ServiceOne::class, $svc2);
     static::assertEquals(2, $factory->getGenerated());
+  }
+
+  public function testWatchResolveAttributes()
+  {
+    $di = new DependencyInjector();
+
+    // Resolve still functions without a watcher
+    $wt = $di->resolve(AttributeWatcherTest::class);
+    static::assertInstanceOf(AttributeWatcherTest::class, $wt);
+
+    // With resolver
+    $attributes = new AttributeWatcher();
+    $di->setReflectionObserver($attributes);
+    $wt2 = $di->resolve(AttributeWatcherTest::class);
+    static::assertInstanceOf(AttributeWatcherTest::class, $wt2);
+    static::assertCount(3, $attributes->attributes());
   }
 }
