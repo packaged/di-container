@@ -248,6 +248,10 @@ class DependencyInjector
   {
     $reflection = new \ReflectionMethod($object, $method);
     $this->_reflectionObserver?->observe($reflection);
+    if($this->_reflectionObserver instanceof ReflectionInterrupt && $this->_reflectionObserver->shouldInterruptMethod())
+    {
+      return $this->_reflectionObserver->interruptMethod();
+    }
     return $this->_postResolve($reflection->invokeArgs($object, $this->_resolveParameters($reflection, $parameters)));
   }
 
@@ -264,6 +268,10 @@ class DependencyInjector
     $reflection = new \ReflectionClass($className);
     $this->_reflectionObserver?->observe($reflection);
     $constructor = $reflection->getConstructor();
+    if($this->_reflectionObserver instanceof ReflectionInterrupt && $this->_reflectionObserver->shouldInterruptClass())
+    {
+      return $this->_reflectionObserver->interruptClass();
+    }
     if($constructor)
     {
       return $this->_postResolve($reflection->newInstanceArgs($this->_resolveParameters($constructor, $parameters)));
