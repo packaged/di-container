@@ -11,6 +11,7 @@ use Packaged\Tests\DiContainer\Supporting\ExtendedBasicObject;
 use Packaged\Tests\DiContainer\Supporting\MethodCaller;
 use Packaged\Tests\DiContainer\Supporting\NeedyObject;
 use Packaged\Tests\DiContainer\Supporting\ResolvableObject;
+use Packaged\Tests\DiContainer\Supporting\SecondObserver;
 use Packaged\Tests\DiContainer\Supporting\ServiceInterface;
 use Packaged\Tests\DiContainer\Supporting\ServiceOne;
 use Packaged\Tests\DiContainer\Supporting\ServiceTwo;
@@ -343,5 +344,24 @@ class DependencyInjectorTest extends TestCase
     $wt2 = $di->resolve(AttributeWatcherTest::class);
     static::assertInstanceOf(AttributeWatcherTest::class, $wt2);
     static::assertCount(3, $attributes->attributes());
+  }
+
+  public function testWatchWithMultipleObservers()
+  {
+    $di = new DependencyInjector();
+
+    // Resolve still functions without a watcher
+    $wt = $di->resolve(AttributeWatcherTest::class);
+    static::assertInstanceOf(AttributeWatcherTest::class, $wt);
+
+    // With resolver
+    $attributes = new AttributeWatcher();
+    $another = new SecondObserver();
+    $di->addReflectionObserver($attributes);
+    $di->addReflectionObserver($another);
+    $wt2 = $di->resolve(AttributeWatcherTest::class);
+    static::assertInstanceOf(AttributeWatcherTest::class, $wt2);
+    static::assertCount(3, $attributes->attributes());
+    static::assertCount(2, $another->attributes());
   }
 }
