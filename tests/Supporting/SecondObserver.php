@@ -21,7 +21,7 @@ class SecondObserver implements ReflectionObserver
 
       foreach($attributes as $attribute)
       {
-        if (!in_array($attribute->getName(), ['Packaged\Tests\DiContainer\abc', 'Packaged\Tests\DiContainer\One']))
+        if ($attribute->getName() != 'Packaged\Tests\DiContainer\abc')
         {
           $this->_attributes[] = $attribute;
         }
