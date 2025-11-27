@@ -23,12 +23,21 @@ class DependencyInjector
   // Post Resolver Callbacks
   protected array $_postResolver = [];
 
-  protected ?ReflectionObserver $_reflectionObserver = null;
+  /**
+   * @var ReflectionObserver[]
+   */
+  protected array $_reflectionObservers = [];
+
+  public function addReflectionObserver(ReflectionObserver $observer): ReflectionObserver
+  {
+    $this->_reflectionObservers[] = $observer;
+    return $observer;
+  }
 
   public function setReflectionObserver(ReflectionObserver $observer): ReflectionObserver
   {
-    $this->_reflectionObserver = $observer;
-    return $this->_reflectionObserver;
+    $this->_reflectionObservers = [$observer];
+    return $observer;
   }
 
   public function factory($abstract, string|callable $generator, $mode = self::MODE_MUTABLE)
@@ -247,11 +256,16 @@ class DependencyInjector
   public function resolveMethod(object $object, ?string $method, ...$parameters): mixed
   {
     $reflection = new \ReflectionMethod($object, $method);
-    $this->_reflectionObserver?->observe($reflection);
-    if($this->_reflectionObserver instanceof ReflectionInterrupt && $this->_reflectionObserver->shouldInterruptMethod())
+
+    foreach ($this->_reflectionObservers as $observer)
     {
-      return $this->_reflectionObserver->interruptMethod();
+      $observer->observe($reflection);
+      if($observer instanceof ReflectionInterrupt && $observer->shouldInterruptMethod())
+      {
+        return $observer->interruptMethod();
+      }
     }
+
     return $this->_postResolve($reflection->invokeArgs($object, $this->_resolveParameters($reflection, $parameters)));
   }
 
@@ -266,7 +280,12 @@ class DependencyInjector
   public function resolveObject(string $className, ...$parameters): object
   {
     $reflection = new \ReflectionClass($className);
-    $this->_reflectionObserver?->observe($reflection);
+
+    foreach ($this->_reflectionObservers as $observer)
+    {
+      $observer->observe($reflection);
+    }
+
     $constructor = $reflection->getConstructor();
     if($constructor)
     {
