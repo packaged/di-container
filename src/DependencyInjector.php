@@ -189,7 +189,7 @@ class DependencyInjector
    *
    * @return bool
    */
-  public function hasShared($abstract, string $checkMode = null): bool
+  public function hasShared($abstract, ?string $checkMode = null): bool
   {
     $exists = isset($this->_instances[$abstract]);
     return !$exists || $checkMode === null ? $exists : $this->_instances[$abstract]['mode'] === $checkMode;
