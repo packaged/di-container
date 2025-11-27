@@ -5,7 +5,7 @@ class TestObject
 {
   public array $params = [];
 
-  public function __construct(array $params = null)
+  public function __construct(?array $params = null)
   {
     $this->params = $params ?? [];
   }

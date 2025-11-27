@@ -8,7 +8,7 @@ class ResolvableObject implements Resolvable
 {
   protected ?ServiceInterface $_svc = null;
 
-  public function resolveWith(ServiceInterface $svc = null)
+  public function resolveWith(?ServiceInterface $svc = null)
   {
     $this->_svc = $svc ?? $this->_svc;
     return $this;
