@@ -254,6 +254,44 @@ class DependencyInjectorTest extends TestCase
     static::assertEquals('dark apple', $result);
   }
 
+  public function testAliasIsAvailable()
+  {
+    $di = new DependencyInjector();
+
+    $this->assertFalse($di->isAvailable(CacheInterface::class));
+    $di->aliasAbstract(CacheInterface::class, Cache::class);
+    $this->assertFalse($di->isAvailable(CacheInterface::class));
+
+    $di->share(Cache::class, new Cache());
+    $this->assertTrue($di->isAvailable(CacheInterface::class));
+    $this->assertTrue($di->isAvailable(CacheInterface::class, true));
+
+    $di2 = new DependencyInjector();
+    $di2->aliasAbstract(CacheInterface::class, Cache::class);
+    $di2->factory(Cache::class, fn() => new Cache());
+    $this->assertTrue($di2->isAvailable(CacheInterface::class, false));
+  }
+
+  public function testAliasHasShared()
+  {
+    $di = new DependencyInjector();
+    $di->aliasAbstract(CacheInterface::class, Cache::class);
+    $this->assertFalse($di->hasShared(CacheInterface::class));
+
+    $di->share(Cache::class, new Cache());
+    $this->assertTrue($di->hasShared(CacheInterface::class));
+  }
+
+  public function testAliasHasSharedWithCheckMode()
+  {
+    $di = new DependencyInjector();
+    $di->aliasAbstract(CacheInterface::class, Cache::class);
+    $di->share(Cache::class, new Cache(), DependencyInjector::MODE_IMMUTABLE);
+
+    $this->assertTrue($di->hasShared(CacheInterface::class, DependencyInjector::MODE_IMMUTABLE));
+    $this->assertFalse($di->hasShared(CacheInterface::class, DependencyInjector::MODE_MUTABLE));
+  }
+
   public function testAliasAbstract()
   {
     $di = new DependencyInjector();

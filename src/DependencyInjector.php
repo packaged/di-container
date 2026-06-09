@@ -195,7 +195,7 @@ class DependencyInjector
 
     if(!$exists && isset($this->_aliases[$abstract]))
     {
-      return $this->hasShared(...$this->_aliases[$abstract]);
+      return $this->hasShared($this->_aliases[$abstract][0], $checkMode);
     }
 
     return !$exists || $checkMode === null ? $exists : $this->_instances[$abstract]['mode'] === $checkMode;
@@ -205,7 +205,7 @@ class DependencyInjector
   {
     if(isset($this->_aliases[$abstract]))
     {
-      return $this->isAvailable($this->_aliases[$abstract][0]);
+      return $this->isAvailable($this->_aliases[$abstract][0], $shared);
     }
     if($shared === false)
     {
