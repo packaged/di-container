@@ -265,6 +265,7 @@ class DependencyInjectorTest extends TestCase
     $di->share(Cache::class, new Cache());
     $this->assertTrue($di->isAvailable(CacheInterface::class));
     $this->assertTrue($di->isAvailable(CacheInterface::class, true));
+    $this->assertFalse($di->isAvailable(CacheInterface::class, false));
 
     $di2 = new DependencyInjector();
     $di2->aliasAbstract(CacheInterface::class, Cache::class);
