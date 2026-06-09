@@ -192,11 +192,21 @@ class DependencyInjector
   public function hasShared($abstract, ?string $checkMode = null): bool
   {
     $exists = isset($this->_instances[$abstract]);
+
+    if(!$exists && isset($this->_aliases[$abstract]))
+    {
+      return $this->hasShared(...$this->_aliases[$abstract]);
+    }
+
     return !$exists || $checkMode === null ? $exists : $this->_instances[$abstract]['mode'] === $checkMode;
   }
 
   public function isAvailable($abstract, $shared = null): bool
   {
+    if(isset($this->_aliases[$abstract]))
+    {
+      return $this->isAvailable($this->_aliases[$abstract][0]);
+    }
     if($shared === false)
     {
       return isset($this->_factories[$abstract]);
